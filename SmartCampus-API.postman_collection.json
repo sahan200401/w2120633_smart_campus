@@ -1,0 +1,270 @@
+{
+  "info": {
+    "name": "Smart Campus API - Complete Collection",
+    "_postman_id": "smart-campus-api-v1",
+    "description": "Complete Postman collection for the Smart Campus Sensor & Room Management API. Base URL: http://localhost:8080/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Part 1 - Discovery",
+      "item": [
+        {
+          "name": "GET Discovery Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}", "host": ["{{baseUrl}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part 2 - Room Management",
+      "item": [
+        {
+          "name": "GET All Rooms",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] } }
+        },
+        {
+          "name": "GET Room by ID",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms","LIB-301"] } }
+        },
+        {
+          "name": "POST Create Room",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"HALL-001\",\n  \"name\": \"Main Hall\",\n  \"capacity\": 200\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "PUT Update Room",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Main Hall Updated\",\n  \"capacity\": 250\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/rooms/HALL-001", "host": ["{{baseUrl}}"], "path": ["rooms","HALL-001"] }
+          }
+        },
+        {
+          "name": "DELETE Room - Success (empty room)",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/HALL-001", "host": ["{{baseUrl}}"], "path": ["rooms","HALL-001"] } }
+        },
+        {
+          "name": "DELETE Room - 409 Room Has Sensors",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms","LIB-301"] } }
+        },
+        {
+          "name": "DELETE Room - 404 Room Not Found",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/DOES-NOT-EXIST", "host": ["{{baseUrl}}"], "path": ["rooms","DOES-NOT-EXIST"] } }
+        }
+      ]
+    },
+    {
+      "name": "Part 3 - Sensor Operations",
+      "item": [
+        {
+          "name": "GET All Sensors",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] } }
+        },
+        {
+          "name": "GET Sensors Filtered by Type",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/sensors?type=CO2", "host": ["{{baseUrl}}"], "path": ["sensors"], "query": [{ "key": "type", "value": "CO2" }] }
+          }
+        },
+        {
+          "name": "GET Sensor by ID",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/TEMP-001", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-001"] } }
+        },
+        {
+          "name": "POST Create Sensor - Success",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"LIGHT-001\",\n  \"type\": \"Light\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 0.0,\n  \"roomId\": \"LIB-301\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor - 422 Invalid roomId",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"GHOST-001\",\n  \"type\": \"Ghost\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 0.0,\n  \"roomId\": \"DOES-NOT-EXIST\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor - 400 Missing ID",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"Temperature\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 0.0,\n  \"roomId\": \"LIB-301\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "POST Create Sensor - 409 Already Exists",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"TEMP-001\",\n  \"type\": \"Temperature\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 0.0,\n  \"roomId\": \"LIB-301\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "PUT Update Sensor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 25.0\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/OCC-001", "host": ["{{baseUrl}}"], "path": ["sensors","OCC-001"] }
+          }
+        },
+        {
+          "name": "DELETE Sensor by ID",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/sensors/LIGHT-001", "host": ["{{baseUrl}}"], "path": ["sensors","LIGHT-001"] } }
+        }
+      ]
+    },
+    {
+      "name": "Part 4 - Sensor Readings (Sub-Resource)",
+      "item": [
+        {
+          "name": "GET All Readings for Sensor",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/TEMP-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-001","readings"] } }
+        },
+        {
+          "name": "GET Readings - Empty (before any are posted)",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","CO2-001","readings"] } }
+        },
+        {
+          "name": "POST Add Reading - ACTIVE Sensor (TEMP-001)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": 24.7\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/TEMP-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-001","readings"] }
+          }
+        },
+        {
+          "name": "POST Add Reading - ACTIVE Sensor (CO2-001)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": 512.3\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/CO2-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","CO2-001","readings"] }
+          }
+        },
+        {
+          "name": "POST Add Reading - 403 MAINTENANCE Sensor (OCC-001)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": 1.0\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/OCC-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","OCC-001","readings"] }
+          }
+        },
+        {
+          "name": "GET Readings - 404 Sensor Not Found",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/FAKE-999/readings", "host": ["{{baseUrl}}"], "path": ["sensors","FAKE-999","readings"] } }
+        }
+      ]
+    },
+    {
+      "name": "Part 5 - Error Handling Showcase",
+      "item": [
+        {
+          "name": "409 - Delete Room With Sensors",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/LIB-301", "host": ["{{baseUrl}}"], "path": ["rooms","LIB-301"] } }
+        },
+        {
+          "name": "422 - Create Sensor With Bad roomId",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"GHOST-001\",\n  \"type\": \"Ghost\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 0.0,\n  \"roomId\": \"XYZ-999\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "403 - Post Reading to MAINTENANCE Sensor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": 5.0\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/OCC-001/readings", "host": ["{{baseUrl}}"], "path": ["sensors","OCC-001","readings"] }
+          }
+        },
+        {
+          "name": "415 - Wrong Content-Type",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "text/plain" }],
+            "body": { "mode": "raw", "raw": "this is not json" },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bonus - Full Workflow (Run in Order)",
+      "item": [
+        {
+          "name": "Step 1 - Create Room CONF-201",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"CONF-201\",\n  \"name\": \"Conference Room 201\",\n  \"capacity\": 20\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/rooms", "host": ["{{baseUrl}}"], "path": ["rooms"] }
+          }
+        },
+        {
+          "name": "Step 2 - Create Sensor in CONF-201",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"TEMP-002\",\n  \"type\": \"Temperature\",\n  \"status\": \"ACTIVE\",\n  \"currentValue\": 21.0,\n  \"roomId\": \"CONF-201\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors", "host": ["{{baseUrl}}"], "path": ["sensors"] }
+          }
+        },
+        {
+          "name": "Step 3 - Post Reading to TEMP-002",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"value\": 22.3\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/sensors/TEMP-002/readings", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-002","readings"] }
+          }
+        },
+        {
+          "name": "Step 4 - Verify Sensor currentValue Updated",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/TEMP-002", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-002"] } }
+        },
+        {
+          "name": "Step 5 - Verify Reading History",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/sensors/TEMP-002/readings", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-002","readings"] } }
+        },
+        {
+          "name": "Step 6 - Try to Delete CONF-201 (expect 409)",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/CONF-201", "host": ["{{baseUrl}}"], "path": ["rooms","CONF-201"] } }
+        },
+        {
+          "name": "Step 7 - Delete Sensor TEMP-002 First",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/sensors/TEMP-002", "host": ["{{baseUrl}}"], "path": ["sensors","TEMP-002"] } }
+        },
+        {
+          "name": "Step 8 - Delete CONF-201 (now succeeds)",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/rooms/CONF-201", "host": ["{{baseUrl}}"], "path": ["rooms","CONF-201"] } }
+        }
+      ]
+    }
+  ]
+}
