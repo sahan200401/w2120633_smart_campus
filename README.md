@@ -12,7 +12,7 @@ Manages university Rooms and their associated Sensors, with full historical read
 4. [Build & Run Instructions](#build--run-instructions)
 5. [API Reference](#api-reference)
 6. [Sample curl Commands](#sample-curl-commands)
-7. [Conceptual Report (Question Answers)](#conceptual-report-question-answers)
+7. [Conceptual Report (Question & Answers)](#conceptual-report-question--answers)
 
 ---
 
@@ -91,15 +91,10 @@ smart-campus-api/
 - **Apache Maven 3.6+** (`mvn -version`)
 - **Apache Tomcat 9** (download from https://tomcat.apache.org/download-90.cgi)
 
-### Step 1 – Clone / unzip the project
+### Step 1 – Clone the project
 ```bash
-# If cloning from GitHub:
 git clone https://github.com/<your-username>/smart-campus-api.git
 cd smart-campus-api
-
-# Or, if you have the zip:
-unzip smartcampus-tomcat.zip
-cd smartcampus-tomcat
 ```
 
 ### Step 2 – Build the WAR file
@@ -114,7 +109,7 @@ target/ROOT.war
 ### Step 3 – Deploy to Tomcat
 **Important:** The WAR is named `ROOT.war` so Tomcat serves it at the root context (`/`), giving you clean URLs like `http://localhost:8080/api/v1/...`.
 
-First, delete or backup the existing `$CATALINA_HOME/webapps/ROOT` directory (the default Tomcat welcome page), then copy the WAR:
+First, delete or backup the existing `$CATALINA_HOME/webapps/ROOT` directory, then copy the WAR:
 
 **Windows:**
 ```cmd
@@ -321,7 +316,7 @@ Registers a new sensor. The `roomId` must reference an existing room.
 ```json
 {
   "message": "Sensor registered successfully.",
-  "sensor": { "id": "LIGHT-001", ... },
+  "sensor": { "id": "LIGHT-001", "type": "Light", "status": "ACTIVE", "currentValue": 0.0, "roomId": "LIB-301" },
   "link": "/api/v1/sensors/LIGHT-001/readings"
 }
 ```
@@ -492,11 +487,13 @@ curl -s http://localhost:8080/api/v1/sensors | python3 -m json.tool
 
 ---
 
-## Conceptual Report (Question Answers)
+## Conceptual Report (Question & Answers)
 
 ---
 
-### Part 1.1 — JAX-RS Resource Lifecycle: Request-Scoped vs Singleton
+### Part 1.1 — Project & Application Configuration
+
+> **Question:** Explain the default lifecycle of a JAX-RS Resource class. Is a new instance instantiated for every incoming request, or does the runtime treat it as a singleton? Elaborate on how this architectural decision impacts the way you manage and synchronize your in-memory data structures (maps/lists) to prevent data loss or race conditions.
 
 By default, JAX-RS instantiates a **new resource class instance for every incoming HTTP request** (request-scoped). This is the behaviour mandated by the JAX-RS specification and is used by Jersey unless the developer explicitly opts into a different lifecycle.
 
@@ -514,7 +511,9 @@ This design means no explicit `synchronized` blocks are needed in resource metho
 
 ---
 
-### Part 1.2 — HATEOAS: Why Hypermedia is a Hallmark of Advanced REST
+### Part 1.2 — The "Discovery" Endpoint
+
+> **Question:** Why is the provision of "Hypermedia" (links and navigation within responses) considered a hallmark of advanced RESTful design (HATEOAS)? How does this approach benefit client developers compared to static documentation?
 
 **HATEOAS** (Hypermedia as the Engine of Application State) is a constraint of REST architecture in which every API response includes navigational links pointing to related resources and valid next actions. Rather than expecting clients to hard-code URLs, they discover what they can do next by reading the links embedded in each response.
 
@@ -532,7 +531,9 @@ In this project, the discovery endpoint returns a `links` map pointing to `/api/
 
 ---
 
-### Part 2.1 — Returning IDs Only vs Full Room Objects in Lists
+### Part 2.1 — Room Resource Implementation
+
+> **Question:** When returning a list of rooms, what are the implications of returning only IDs versus returning the full room objects? Consider network bandwidth and client-side processing.
 
 When designing `GET /api/v1/rooms` the key trade-off is between **network efficiency** and **client-side simplicity**.
 
@@ -549,7 +550,9 @@ When designing `GET /api/v1/rooms` the key trade-off is between **network effici
 
 ---
 
-### Part 2.2 — Is DELETE Idempotent in This Implementation?
+### Part 2.2 — Room Deletion & Safety Logic
+
+> **Question:** Is the DELETE operation idempotent in your implementation? Provide a detailed justification by describing what happens if a client mistakenly sends the exact same DELETE request for a room multiple times.
 
 **Yes, DELETE is idempotent in this implementation**, but with a careful qualification.
 
@@ -565,7 +568,9 @@ The server state is identical after the first and second call (the room is gone 
 
 ---
 
-### Part 3.1 — Consequences of `@Consumes(MediaType.APPLICATION_JSON)` Mismatch
+### Part 3.1 — Sensor Resource & Integrity
+
+> **Question:** We explicitly use the `@Consumes(MediaType.APPLICATION_JSON)` annotation on the POST method. Explain the technical consequences if a client attempts to send data in a different format, such as `text/plain` or `application/xml`. How does JAX-RS handle this mismatch?
 
 The `@Consumes(MediaType.APPLICATION_JSON)` annotation declares that the POST endpoint only accepts requests with a `Content-Type: application/json` header.
 
@@ -583,7 +588,9 @@ This ensures the Jackson deserializer is only called with content it can safely 
 
 ---
 
-### Part 3.2 — `@QueryParam` vs Path Segment for Filtering: Why Query Parameters Are Superior
+### Part 3.2 — Filtered Retrieval & Search
+
+> **Question:** You implemented this filtering using `@QueryParam`. Contrast this with an alternative design where the type is part of the URL path (e.g., `/api/v1/sensors/type/CO2`). Why is the query parameter approach generally considered superior for filtering and searching collections?
 
 **Path segment approach:** `/api/v1/sensors/type/CO2`  
 **Query parameter approach:** `/api/v1/sensors?type=CO2` ← this implementation
@@ -602,7 +609,9 @@ This ensures the Jackson deserializer is only called with content it can safely 
 
 ---
 
-### Part 4.1 — Architectural Benefits of the Sub-Resource Locator Pattern
+### Part 4.1 — The Sub-Resource Locator Pattern
+
+> **Question:** Discuss the architectural benefits of the Sub-Resource Locator pattern. How does delegating logic to separate classes help manage complexity in large APIs compared to defining every nested path (e.g., `sensors/{id}/readings/{rid}`) in one massive controller class?
 
 In JAX-RS, a **sub-resource locator** is a resource method that returns an object instance rather than a `Response`. The runtime then uses that object as the handler for the remaining URL path segments.
 
@@ -629,7 +638,9 @@ public SensorReadingResource getReadingResource(@PathParam("sensorId") String se
 
 ---
 
-### Part 5.1 — Why HTTP 422 Is More Semantically Accurate Than 404 for a Missing `roomId` Reference
+### Part 5.2 — Dependency Validation (422 Unprocessable Entity)
+
+> **Question:** Why is HTTP 422 often considered more semantically accurate than a standard 404 when the issue is a missing reference inside a valid JSON payload?
 
 When a client POSTs a new sensor with a `roomId` that does not exist in the system, returning `404 Not Found` would be **misleading**.
 
@@ -643,7 +654,9 @@ This distinction matters to API consumers: `404` tells them "you called the wron
 
 ---
 
-### Part 5.2 — Cybersecurity Risks of Exposing Java Stack Traces to External Consumers
+### Part 5.4 — The Global Safety Net (500)
+
+> **Question:** From a cybersecurity standpoint, explain the risks associated with exposing internal Java stack traces to external API consumers. What specific information could an attacker gather from such a trace?
 
 Returning raw Java stack traces in API error responses is a serious security vulnerability. The information they reveal can be directly exploited:
 
@@ -655,7 +668,25 @@ Returning raw Java stack traces in API error responses is a serious security vul
 
 4. **Business logic leakage** — Method names and call chains reveal the order in which business operations are executed, allowing an attacker to infer which inputs or sequences of requests trigger specific code paths that might contain vulnerabilities.
 
-5. **SQL / query structure disclosure** — If an ORM or query builder is in use (even not in this project), stack traces frequently include the SQL query that caused an exception, enabling SQL injection reconnaissance.
+5. **SQL / query structure disclosure** — If an ORM or query builder is in use, stack traces frequently include the query that caused an exception, enabling injection reconnaissance.
 
 **Mitigation (implemented in this project):**  
 The `GlobalExceptionMapper<Throwable>` intercepts all unexpected exceptions, logs the full stack trace **server-side only** using `java.util.logging.Logger`, and returns a generic, non-informative `500` response body to the client. The client learns only that an internal error occurred — not why, where, or how.
+
+---
+
+### Part 5.5 — API Request & Response Logging Filters
+
+> **Question:** Why is it advantageous to use JAX-RS filters for cross-cutting concerns like logging, rather than manually inserting `Logger.info()` statements inside every single resource method?
+
+Using JAX-RS filters (`ContainerRequestFilter` / `ContainerResponseFilter`) for logging provides several key advantages over manually adding log statements to each resource method:
+
+1. **Single point of control** — All request and response logging lives in one class (`LoggingFilter`). If the logging format needs to change (e.g., adding a correlation ID or timestamp), you update one file instead of hunting through every resource method across the entire codebase.
+
+2. **No code duplication** — Manually adding `Logger.info()` to every method violates the DRY (Don't Repeat Yourself) principle. With tens of endpoints, this becomes error-prone — developers forget to add logging to new methods or accidentally remove it during refactoring.
+
+3. **Separation of concerns** — Resource methods should focus exclusively on their business logic (creating rooms, reading sensors). Mixing in logging statements pollutes the method body with infrastructure code that has nothing to do with the method's purpose, reducing readability and maintainability.
+
+4. **Guaranteed coverage** — A filter registered with JAX-RS is invoked for **every** request and response automatically, including requests that are rejected at the routing layer (e.g., 415 Unsupported Media Type). Manual logging inside resource methods would miss these cases entirely because the method body is never reached.
+
+5. **Consistent log format** — Filters ensure that every log entry follows the same structure (method + URI on request, status code on response), making logs machine-parseable and easier to feed into monitoring tools like ELK Stack or Splunk.
